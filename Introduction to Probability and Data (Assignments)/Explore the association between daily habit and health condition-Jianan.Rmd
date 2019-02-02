@@ -1,0 +1,121 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `brfss2013`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+
+
+* * *
+
+## Part 1: Data
+**Q1: Describe how the observations in the sample are collected.
+  The Behavioral Risk Factor Surveillance System (BRFSS) is the nation's premier system of health-related telephone surveys that collect state data about U.S. residents regarding their health-related risk behaviors, chronic health conditions, and use of preventive services. Established in 1984 with 15 states, BRFSS now collects data in all 50 states as well as the District of Columbia and three U.S. territories. BRFSS completes more than 400,000 adult interviews each year, making it the largest continuously conducted health survey system in the world.
+**Q2: The implications of this data collection method on the scope of inference 
+  BRFSS survey is actually an observational retrosepctive study that uses a stratified sampling design based on random digit dialing methods to select a representative sample from each state’s non-institutionalized residents. In this sample design, each state begins with a single stratum. To provide adequate sample sizes for smaller geographically defined populations of interest, however, many states sample disproportionately from strata that correspond to sub-state regions.
+Generalizability 
+  BRFSS survey is based on nation's premier system of health-related telephone surveys, which is conceptualizing the qustionnaire, investigating the sample of respondents, and designing reliable observations.
+Causality
+  In this BRFSS survey, the main purpose is to invetigate which factors will cause the health issues and the cause and effect about the correlation between daily habits and health conditions.
+* * *
+
+## Part 2: Research questions
+
+**Research quesion 1: Is there a correlation between Metal Condition and General Health?
+
+**Research quesion 2: Is there a correlation between Inadequate Sleep and Metal Health?
+
+**Research quesion 3:Is there a correlation between BMI and Hypertension Level?
+
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+NOTE: Insert code chunks as needed by clicking on the "Insert a new code chunk" 
+button (green button with orange arrow) above. Make sure that your code is visible
+in the project you submit. Delete this note when before you submit your work.
+
+**Research quesion 1:**
+
+```{r}
+brfss2013_misnervs_genhlth <- brfss2013 %>% 
+  filter(misnervs != "NA") %>% 
+  mutate(gen_hlth = ifelse(genhlth == "Poor", "Poor", "Good")) %>%
+  filter(gen_hlth != "NA")
+ggplot(brfss2013_arthdis_genhlth, aes(x = misnervs, fill = gen_hlth)) +
+  geom_bar(position = "fill") + 
+  scale_fill_discrete(name = "General Health") + 
+  xlab("Feel Nervous Past 30 Days") + 
+  ylab("Proportion")
+```
+
+```{r}
+brfss2013_misnervs_genhlth %>% group_by(misnervs) %>% summarise(prop_poor_hlth = sum(gen_hlth == "Poor") / n())
+```
+
+ggplot(aes(x = age, y = charges)) +
+  geom_point(aes(color = smoker, size = bmi, alpha = .05))
+
+**Research quesion 2:**
+
+```{r}
+brfss2013_menthlth_sleptim1 <- brfss2013 %>% 
+  filter(menthlth != "NA") %>% 
+  filter(sleptim1 != "NA") %>%
+  filter(sex != "NA")
+ggplot(brfss2013_menthlth_sleptim1, aes(x = sleptim1, y = log(menthlth + 1), color = sex)) +
+  geom_point(shape = 19, alpha = .25) +
+  geom_smooth(method = lm, se = FALSE) +
+  scale_colour_discrete(name = "Sex") +
+  xlab("Number Of Days Mental Health Not Good") + 
+  ylab("Inadequate Sleep")
+
+```
+
+```{r}
+brfss2013_menthlth_sleptim1 %>% 
+  group_by(sex) %>% 
+  summarise(corr_menthlth_sleptim1 = cor(sleptim1, menthlth))
+```
+
+**Research quesion 3:**
+
+```{r}
+brfss2013_bphigh4_bmi <- brfss2013 %>% 
+  filter(bphigh4 != "NA") %>% 
+  filter(X_bmi5 != "NA") %>% 
+  mutate(bmi = X_bmi5 / 100)
+ggplot(brfss2013_bphigh4_bmi, aes(x = bphigh4, y = bmi)) +
+  geom_boxplot() + 
+  xlab("Ever Told Blood Pressure High") + 
+  ylab("BMI")
+```
+
+```{r}
+brfss2013_bphigh4_bmi %>% 
+  group_by(bphigh4) %>% 
+  summarise(median_bmi = median(bmi), iqr_bmi = IQR(bmi))
+```
